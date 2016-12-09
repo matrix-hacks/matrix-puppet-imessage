@@ -1,8 +1,15 @@
 using terms from application "Messages"
-	on message received message from buddy for chat
-		do shell script "/usr/local/bin/node /Users/keyvan/Workspace/imessage-bridge/send-test.js"
+	on message received message from this_buddy for this_chat with this_text
+		set this_name to the name of this_buddy
+		(*do shell script "/bin/bash /Users/keyvan/Workspace/imessage-bridge/incoming-event.sh"*)
+		do shell script "cat >>/Users/keyvan/Workspace/imessage-bridge/log <<BRIDGENOTIFY_EOF
+" & this_text & "
+" & this_text & "
+
+BRIDGENOTIFY_EOF"
 		return true
 	end message received
+	
 	on message sent theMessage for theChat
 		
 	end message sent
