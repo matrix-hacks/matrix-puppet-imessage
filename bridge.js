@@ -82,7 +82,7 @@ new Cli({
 module.exports = function() {
   this.init = () => storage.init();
 
-  this.handleIncoming = (msg) => {
+  this.handleIncoming = (msg, markSent) => {
     return new Promise(function(resolve, reject) {
       if (msg.isNotMe) {
         console.log('handling incoming message from apple', msg);
@@ -105,16 +105,18 @@ module.exports = function() {
             })
           }
         }).then(({room_id}) => {
-          console.log('sending message', msg.message);
-          return intent.sendText(room_id, msg.message).then(function() {
-            // we dont want to return this promise because it might fail
-            // which will cause us not to set the message to skip
-            // which would then cause dupe sending
-            intent.invite(room_id, OWNER).then(function() {
-              console.log('invited user', OWNER);
-            }).catch(function(err) {
-              console.log('failed to invite, user probably already in the room');
-            });
+          console.log('!!!!!!!!sending message', msg.message);
+          return markSent().then(function() {
+            return intent.sendText(room_id, msg.message).then(function() {
+              // we dont want to return this promise because it might fail
+              // which will cause us not to set the message to skip
+              // which would then cause dupe sending
+              intent.invite(room_id, OWNER).then(function() {
+                console.log('invited user', OWNER);
+              }).catch(function(err) {
+                console.log('failed to invite, user probably already in the room');
+              });
+            })
           })
         }).catch(function(err) {
           console.log(err);
