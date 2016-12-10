@@ -35,6 +35,18 @@ storage.init({
     q.start();
   });
 
+/** 
+ * Basic algorithm for process() function:
+ *
+ * on start
+ * for files in today's folder
+ * mark each message with skip
+ * 
+ * on file change or add
+ * go thru each message
+ * if skip, do nothing
+ * if not skip, do relay, mark as skip
+ */
   function process(filepath) {
     var parts = filepath.split(path.sep);
     var len = parts.length;
