@@ -107,7 +107,14 @@ module.exports = function() {
         }).then(({room_id}) => {
           console.log('sending message', msg.message);
           return intent.sendText(room_id, msg.message).then(function() {
-            return intent.invite(room_id, OWNER);  
+            // we dont want to return this promise because it might fail
+            // which will cause us not to set the message to skip
+            // which would then cause dupe sending
+            intent.invite(room_id, OWNER).then(function() {
+              console.log('invited user', OWNER);
+            }).catch(function(err) {
+              console.log('failed to invite, user probably already in the room');
+            });
           })
         }).catch(function(err) {
           console.log(err);
