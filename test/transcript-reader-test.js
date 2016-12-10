@@ -5,9 +5,10 @@ var fpath = require('path').join(__dirname, 'fixtures', fname);
 
 describe("transcript-reader", () => {
   var tr = TR(fpath);
-  it("can read a transcript", () => {
-    tr.read().then(tr.parse).then(function(data) {
+  it("can read a transcript", (done) => {
+    tr.getMessages().then(function(data) {
       console.log(data);
+      done()
     });
   });
 });

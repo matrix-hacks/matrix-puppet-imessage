@@ -1,10 +1,68 @@
-require('chokidar').watch(
-  `${require('os').homedir()}/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive/**/*.ichat`,
-  { persistent: true, ignoreInitial: true }
-)
-.on('add', process)
-.on('change', process)
+const HOME = require('os').homedir();
+const chokidar = require('chokidar');
+const TR = require('./transcript-reader');
+const path = require('path');
+const moment = require('moment');
+const archives = `${HOME}/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive/**/*.ichat`;
+const queue = require('queue');
+const q = queue();
+const Bridge = require('./bridge');
 
-function process(path) {
-  console.log('processing '+path);
-}
+q.timeout = 500;
+q.concurrency = 1;
+
+var storage = require('node-persist');
+storage.init({
+  dir:'persist',
+  stringify: JSON.stringify,
+  parse: JSON.parse,
+  encoding: 'utf8',
+  logging: false,
+  continuous: true,
+  interval: false,
+  ttl: '24h'
+}).then(function() {
+  let ready = false;
+  const watcherOptions = { persistent: true, ignoreInitial: false }
+  const watcher = chokidar.watch(archives, watcherOptions);
+  watcher.on('add', process);
+  watcher.on('change', process);
+  watcher.on('ready', () => {
+    q.on('end', function() {
+      ready = true
+      console.log('ready');
+    });
+    q.start();
+  });
+
+  function process(filepath) {
+    var parts = filepath.split(path.sep);
+    var len = parts.length;
+    let [ dateString ] = parts.slice(len-2, len-1);
+    //var today = moment().format('YYYY-MM-DD')
+    var today = moment().format('YYYY-MM-DD')
+    if ( ready ) {
+      // go thru each msg, if skip noop, else relay+skip
+      TR(filepath).getMessages().map(msg => {
+        return storage.getItem(msg.hash).then((meta) => {
+          let shouldSkip = meta && meta.skip;
+          let shouldRelay = !shouldSkip;
+          if (shouldRelay) {
+            return Bridge.handleIncoming(msg).then(function() {
+              return storage.setItem(msg.hash, {skip: true})
+            });
+          }
+        })
+      }).catch(err=>console.error(err))
+    } else {
+      if (dateString === today) {
+        // foreach, mark skip
+        q.push(function(cb) {
+          TR(filepath).getMessages().map(msg => {
+            return storage.setItem(msg.hash, {skip: true})
+          }).catch(console.error).finally(cb);
+        });
+      }
+    }
+  }
+});
