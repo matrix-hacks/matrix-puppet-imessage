@@ -12,9 +12,9 @@ let bridge;
 q.timeout = 500;
 q.concurrency = 1;
 
-var storage = require('node-persist');
-storage.init({
-  dir:'persist',
+var nodePersist = require('node-persist');
+var storage = nodePersist.create({
+  dir:'persist/messages',
   stringify: JSON.stringify,
   parse: JSON.parse,
   encoding: 'utf8',
@@ -22,7 +22,9 @@ storage.init({
   continuous: true,
   interval: false,
   ttl: '24h'
-}).then(function() {
+})
+
+storage.init().then(function() {
   let ready = false;
   const watcherOptions = { persistent: true, ignoreInitial: false }
   const watcher = chokidar.watch(archives, watcherOptions);
@@ -31,9 +33,15 @@ storage.init({
   watcher.on('ready', () => {
     q.on('end', function() {
       bridge = new Bridge();
-      bridge.listen(8080);
-      ready = true
-      console.log('ready');
+      bridge.init().then(function() {
+        ready = true
+        console.log('ready');
+        //bridge.handleIncoming({
+        //  isNotMe: true,
+        //  sender: 'someone',
+        //  message: 'hello'
+        //})
+      });
     });
     q.start();
   });
@@ -74,6 +82,7 @@ storage.init({
         // foreach, mark skip
         q.push(function(cb) {
           TR(filepath).getMessages().map(msg => {
+            console.log('marking', msg.hash);
             return storage.setItem(msg.hash, {skip: true})
           }).catch(console.error).finally(cb);
         });

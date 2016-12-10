@@ -27,6 +27,7 @@
     "node-persist": "^2.0.7",
     "osa-imessage": "^1.0.7",
     "plist": "^2.0.1",
+    "pryjs": "^1.0.3",
     "queue": "^4.0.0",
     "request": "^2.79.0",
     "simple-plist": "^0.2.1",

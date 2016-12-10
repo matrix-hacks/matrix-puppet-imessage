@@ -1,3 +1,5 @@
 node_modules
 logs/
 persist/
+*.db
+*.yaml
