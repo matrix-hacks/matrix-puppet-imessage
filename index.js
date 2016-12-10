@@ -7,6 +7,7 @@ const archives = `${HOME}/Library/Containers/com.apple.iChat/Data/Library/Messag
 const queue = require('queue');
 const q = queue();
 const Bridge = require('./bridge');
+let bridge;
 
 q.timeout = 500;
 q.concurrency = 1;
@@ -29,6 +30,8 @@ storage.init({
   watcher.on('change', process);
   watcher.on('ready', () => {
     q.on('end', function() {
+      bridge = new Bridge();
+      bridge.listen(8080);
       ready = true
       console.log('ready');
     });
@@ -60,7 +63,7 @@ storage.init({
           let shouldSkip = meta && meta.skip;
           let shouldRelay = !shouldSkip;
           if (shouldRelay) {
-            return Bridge.handleIncoming(msg).then(function() {
+            return bridge.handleIncoming(msg).then(function() {
               return storage.setItem(msg.hash, {skip: true})
             });
           }
