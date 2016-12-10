@@ -41,7 +41,7 @@ new Cli({
           return {} // auto provision users w no additional data
         },
         onEvent: function({data: { type, room_id, content: { body }}}, context) {
-          console.log('got incoming matrix request');
+          console.log('got incoming matrix request of type', type);
           //console.log(request, context);
           //console.log('req data type', request.data.type);
           if (type === "m.room.message") {
