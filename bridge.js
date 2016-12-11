@@ -105,11 +105,15 @@ module.exports = function() {
           }
         }).then(({room_id}) => {
           console.log('!!!!!!!!sending message', msg.message);
+          // let's mark as sent early, because this is important for preventing
+          // duplicate messages showing up. i want to make sure this happens...
+          // XXX but it is a little shitty to do this now, before actually knowing
+          // we successfully sent. but for now i would rather prevent dupes, and
+          // if we host this close (LAN) to the homeserver then maybe the
+          // intent.sendText will succeed very reliably anyway.
           return markSent().then(function() {
             return intent.sendText(room_id, msg.message).then(function() {
-              // we dont want to return this promise because it might fail
-              // which will cause us not to set the message to skip
-              // which would then cause dupe sending
+              // XXX need to check first if the owner is already in the room
               intent.invite(room_id, config.owner).then(function() {
                 console.log('invited user', config.owner);
               }).catch(function(err) {
