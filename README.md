@@ -28,4 +28,6 @@ Update `app_service_config_files` with the path to this yaml file.
 
 # TODO
 
-Be able to originate conversations from the Matrix side.
+* Be able to originate conversations from the Matrix side.
+* Use the roomStore and userStore features instead of node-persist
+
