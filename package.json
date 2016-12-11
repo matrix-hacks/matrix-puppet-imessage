@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test/**/*-test.js",
-    "tdd": "mocha -w test/**/*-test.js",
-    "postinstall": "bash install-event-receiver.sh"
+    "tdd": "mocha -w test/**/*-test.js"
   },
   "keywords": [],
   "author": "",
