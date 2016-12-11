@@ -62,7 +62,6 @@ storage.init().then(function() {
     var parts = filepath.split(path.sep);
     var len = parts.length;
     let [ dateString ] = parts.slice(len-2, len-1);
-    //var today = moment().format('YYYY-MM-DD')
     var today = moment().format('YYYY-MM-DD')
     if ( ready ) {
       // go thru each msg, if skip noop, else relay+skip
@@ -72,7 +71,7 @@ storage.init().then(function() {
           let shouldRelay = !shouldSkip;
           if (shouldRelay) {
             let markSkip = ({hash, sender, message}) => () => {
-              console.log('########## marking skip: ', hash, sender, message);
+              //console.log('########## marking skip: ', hash, sender, message);
               return storage.setItem(hash, {skip: true});
             }
             return bridge.handleIncoming(msg, markSkip(msg))
@@ -84,7 +83,7 @@ storage.init().then(function() {
         // foreach, mark skip
         q.push(function(cb) {
           TR(filepath).getMessages().map(msg => {
-            console.log('marking skip: ', path.basename(filepath), msg.sender, msg.message);
+            //console.log('marking skip: ', path.basename(filepath), msg.sender, msg.message);
             return storage.setItem(msg.hash, {skip: true})
           }).catch(console.error).finally(cb);
         });

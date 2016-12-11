@@ -1,0 +1,10 @@
+{
+  "owner": "@kfatehi:synapse.keyvan.pw",
+  "registrationPath": "imessage-registration.yaml",
+  "port": 8090,
+  "bridge": {
+    "homeserverUrl":"https://synapse.keyvan.pw",
+    "domain": "synapse.keyvan.pw",
+    "registration": "imessage-registration.yaml"
+  }
+}

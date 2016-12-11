@@ -3,3 +3,4 @@ logs/
 persist/
 *.db
 *.yaml
+config.json

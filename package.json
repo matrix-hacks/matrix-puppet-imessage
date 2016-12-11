@@ -13,25 +13,19 @@
   "license": "ISC",
   "dependencies": {
     "JSONStream": "^1.2.1",
-    "axios": "^0.15.3",
     "bluebird": "^3.4.6",
-    "body-parser": "^1.15.2",
-    "chai": "^3.5.0",
     "chokidar": "^1.6.1",
     "concat-stream": "^1.5.2",
-    "express": "^4.14.0",
     "imessage": "^0.1.5",
     "matrix-appservice-bridge": "^1.3.3",
-    "mocha": "^3.2.0",
     "moment": "^2.17.1",
     "node-persist": "^2.0.7",
     "osa-imessage": "^1.0.7",
-    "plist": "^2.0.1",
-    "pryjs": "^1.0.3",
     "queue": "^4.0.0",
-    "request": "^2.79.0",
-    "simple-plist": "^0.2.1",
-    "through": "^2.3.8",
-    "xml2js": "^0.4.17"
+    "simple-plist": "^0.2.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
   }
 }

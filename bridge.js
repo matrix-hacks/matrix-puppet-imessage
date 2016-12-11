@@ -1,9 +1,9 @@
 let bridge;
+const config = require('./config.json')
 const Cli = require("matrix-appservice-bridge").Cli;
 const Bridge = require("matrix-appservice-bridge").Bridge;
 const AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 const osaimessage = require('osa-imessage');
-const OWNER = '@kfatehi:synapse.keyvan.pw'
 const nodePersist = require('node-persist');
 const storage = nodePersist.create({
   dir:'persist/rooms',
@@ -18,10 +18,9 @@ const storage = nodePersist.create({
 const Promise = require('bluebird');
 const iMessageSend = Promise.promisify(osaimessage.send)
 
-
 new Cli({
-  port: 8090,
-  registrationPath: "imessage-registration.yaml",
+  port: config.port,
+  registrationPath: config.registrationPath,
   generateRegistration: function(reg, callback) {
     reg.setId(AppServiceRegistration.generateToken());
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
@@ -30,11 +29,11 @@ new Cli({
     reg.addRegexPattern("users", "@imessage_.*", true);
     callback(reg);
   },
-  run: function(port, config) {
+  run: function(port, _config) {
     bridge = new Bridge({
-      homeserverUrl: "https://synapse.keyvan.pw",
-      domain: "synapse.keyvan.pw",
-      registration: "imessage-registration.yaml",
+      homeserverUrl: config.bridge.homeserverUrl,
+      domain: config.bridge.domain,
+      registration: config.bridge.registration,
       controller: {
         onUserQuery: function(queriedUser) {
           console.log('got user query');
@@ -86,7 +85,7 @@ module.exports = function() {
     return new Promise(function(resolve, reject) {
       if (msg.isNotMe) {
         console.log('handling incoming message from apple', msg);
-        const ghost = "@imessage_"+msg.sender+":synapse.keyvan.pw";
+        const ghost = "@imessage_"+msg.sender+":"+config.bridge.domain;
         let intent = bridge.getIntent(ghost);
         return storage.getItem(ghost).then((meta) => {
           if (meta && meta.room_id) {
@@ -111,8 +110,8 @@ module.exports = function() {
               // we dont want to return this promise because it might fail
               // which will cause us not to set the message to skip
               // which would then cause dupe sending
-              intent.invite(room_id, OWNER).then(function() {
-                console.log('invited user', OWNER);
+              intent.invite(room_id, config.owner).then(function() {
+                console.log('invited user', config.owner);
               }).catch(function(err) {
                 console.log('failed to invite, user probably already in the room');
               });
@@ -124,5 +123,4 @@ module.exports = function() {
       }
     });
   }
-
 }
