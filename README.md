@@ -22,9 +22,13 @@ Copy `config.sample.json` to `config.json` and update it to match your setup
 
 ## register the app service
 
-Generate a yaml file with `node index.js -r -u "https://your.matrix.homeserver"`
+Generate an `imessage-registration.yaml` file with `node index.js -r -u "https://your.matrix.homeserver"`
 
-Update `app_service_config_files` with the path to this yaml file.
+Note: The 'registration' setting in the config.json needs to the path to this file. By default, it already is.
+
+Copy this `imessage-registration.yaml` file to your home server, then edit it, setting its url to point to your bridge server. e.g. `url: 'http://your-bridge-server.example.org:8090'`
+
+Edit your homeserver.yaml file and update the `app_service_config_files` with the path to the `imessage-registration.yaml` file.
 
 # TODO
 
