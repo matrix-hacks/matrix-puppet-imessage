@@ -62,7 +62,12 @@ storage.init().then(function() {
     var parts = filepath.split(path.sep);
     var len = parts.length;
     let [ dateString ] = parts.slice(len-2, len-1);
+    var filename = parts[len-1];
+    let [ fileRecipient ] = filename.split(" on ");
+    //console.log("File recipient: " + fileRecipient);
+
     var today = moment().format('YYYY-MM-DD')
+
     if ( ready ) {
       // go thru each msg, if skip noop, else relay+skip
       TR(filepath).getMessages().map(msg => {
@@ -74,7 +79,7 @@ storage.init().then(function() {
               //console.log('########## marking skip: ', hash, sender, message);
               return storage.setItem(hash, {skip: true});
             }
-            return bridge.handleIncoming(msg, markSkip(msg))
+            return bridge.handleIncoming(msg, markSkip(msg), fileRecipient)
           }
         })
       }).catch(err=>console.error(err))
