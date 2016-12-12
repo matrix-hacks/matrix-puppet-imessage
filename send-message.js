@@ -1,4 +1,4 @@
-const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
 
 const sms = 'service "SMS"';
 const imessage = '(service 1 whose service type is iMessage)';
@@ -26,39 +26,46 @@ const imessage = '(service 1 whose service type is iMessage)';
  * 
  * `sendMessage("07352009813", "Hi again Jeff!", "sms")`
  **/
-var escapeString = require('escape-string-applescript');
+var escapeString = (str) => {
+  return str.replace(/[\\"]/g, '\\$&')
+}
 module.exports = function(to, _message, _method) {
-  let message = escapeString(_message);
   let method = _method === 'sms' ? sms : imessage;
-  let command;
+  let message =  escapeString(_message);
+  console.log('escaped to', message);
+  let args = ['-e'];
 
   // If string contains letters, it must be a contact name so
   // find the relevant phone number first
   if (/[a-z]/i.test(to)) {
-    command = `/usr/bin/osascript -e 'tell application "Contacts"
+    args.push(`tell application "Contacts"
     set i to value of phone 1 of (person 1 whose name = "${to}")
     end tell
     tell application "Messages"
     send "${message}" to buddy i of ${method}
-    end tell'`;
+    end tell`);
   } else {
-    command = `/usr/bin/osascript -e 'tell application "Messages"
+    args.push(`tell application "Messages"
     send "${message}" to buddy "${to}" of ${method}
-    end tell'`;
+    end tell`);
   }
-  
+  console.log('full applescript', args[1]);
+
   return new Promise(function(resolve, reject) {
     // Check user input
     if (!to) reject(new Error('You didn\'t enter a recipient!'));
     else if (!message) reject(new Error('You didn\'t enter a message!'));
     else {
-      exec(command, (err, stdout, stderr) => {
-        if (err) {
-          if (/-1719/.test(err)) reject(new Error(`Couldn't find a number for ${to}`));
-          else reject(new Error(err));
+      var proc = spawn('/usr/bin/osascript', args );
+      proc.stdout.pipe(process.stdout);
+      proc.stderr.pipe(process.stderr);
+      proc.on('exit', function(exitCode)  {
+        if (exitCode != 0)  {
+          reject(new Error('exited nonzero'));
+        } else {
+          resolve('SENT')
         }
-        else resolve({ to, message, method, status: 'sent' })
-      });
+      })
     }
   });
 }
