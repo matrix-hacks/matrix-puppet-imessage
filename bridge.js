@@ -80,12 +80,17 @@ new Cli({
 module.exports = function() {
   this.init = () => storage.init();
 
-  this.handleIncoming = (msg, markSent) => {
+  this.handleIncoming = (msg, markSent, fileRecipient) => {
     return new Promise(function(resolve, reject) {
       if (msg.isNotMe) {
         console.log('handling incoming message from apple', msg);
         const ghost = "@imessage_"+msg.sender+":"+config.bridge.domain;
         let intent = bridge.getIntent(ghost);
+        if(fileRecipient)
+        {
+          intent.setDisplayName(fileRecipient + " (iMsg)");
+        }
+
         return storage.getItem(ghost).then((meta) => {
           if (meta && meta.room_id) {
             console.log('found room', meta);
