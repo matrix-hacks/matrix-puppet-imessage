@@ -3,7 +3,7 @@ const config = require('./config.json')
 const Cli = require("matrix-appservice-bridge").Cli;
 const Bridge = require("matrix-appservice-bridge").Bridge;
 const AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
-const osaimessage = require('osa-imessage');
+const iMessageSend = require('./send-message');
 const nodePersist = require('node-persist');
 const storage = nodePersist.create({
   dir:'persist/rooms',
@@ -16,7 +16,6 @@ const storage = nodePersist.create({
   ttl: false
 })
 const Promise = require('bluebird');
-const iMessageSend = Promise.promisify(osaimessage.send)
 
 new Cli({
   port: config.port,
@@ -51,7 +50,7 @@ new Cli({
               if ( meta && meta.handle ) {
                 console.log('i must deliver this to', meta.handle);
                 console.log('ok delivering it');
-                iMessageSend(body, meta.handle);
+                iMessageSend(meta.handle, body);
               }
             })
           }
