@@ -30,8 +30,12 @@ Copy this `imessage-registration.yaml` file to your home server, then edit it, s
 
 Edit your homeserver.yaml file and update the `app_service_config_files` with the path to the `imessage-registration.yaml` file.
 
+Launch the bridge with ```node index.js```.
+
+Restart your HS.
+
 # TODO
 
-* We currently run a bunch of code every time a message comes in (setRoomTitle, setDisplayName, etc), which makes the bridge that is very chatty with the HS. This code can be moved into the createRoom block once we've 100% settled on how the room title, display name, etc should work. In the meantime, it eases development.
+* We currently run a bunch of code every time a message comes in (setRoomTitle, setDisplayName, etc), which makes the bridge very chatty with the HS. This code can be moved into the createRoom block once we've 100% settled on how the room title, display name, etc should work. In the meantime, it eases development.
 * Be able to originate conversations from the Matrix side.
 * Use the roomStore and userStore features instead of node-persist
