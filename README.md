@@ -6,7 +6,7 @@ This is a Matrix bridge for Apple iMessage
 
 You need a Mac with a functional Messages.app, already authenticated.
 
-The bridge uses applescripts for outbound messages and watches `~/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive` for incoming messages.
+The bridge uses applescripts for outbound messages and watches `~/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive` for incoming messages, parsed with [ichat2json](https://github.com/kfatehi/ichat2json).
 
 ## installation
 
