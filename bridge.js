@@ -58,8 +58,8 @@ new Cli({
             storage.getItem(room_id).then((meta) => {
               if ( meta && meta.handle ) {
                 console.log('i must deliver this to', meta.handle);
-                console.log('ok delivering it');
-                iMessageSend(meta.handle, body, "sms");
+                console.log('ok delivering it using ' + meta.service);
+                iMessageSend(meta.handle, body, meta.service != "iMessage" ? "sms" : "iMessage");
               }
             })
           }
@@ -119,27 +119,42 @@ module.exports = function() {
       return storage.getItem(ghost).then((meta) => {
         if (meta && meta.room_id) {
           console.log('found room', meta);
+
+          storage.getItem(meta.room_id).then((handleMeta) => {
+            if (handleMeta && handleMeta.handle) {
+              if (msg.service != handleMeta.service) {
+                console.log("service has changed from " + meta.service + " to " + msg.service + ". persisting...");
+                handleMeta.service = msg.service;
+                storage.setItem(meta.room_id, handleMeta);
+              }
+            }
+          });
+
           return meta;
         } else {
           return intent.createRoom({ createAsClient: true }).then(({room_id}) => {
             intent.setPowerLevel(room_id, config.owner, 100);
 
-            let meta = { room_id };
+            let meta = {
+              room_id,
+              "service": msg.service
+            };
+
             console.log('created room', meta);
             // we need to store room_id => imessage handle
             // in order to fulfill responses from the matrix user
-            return storage.setItem(room_id, { handle: roomHandle }).then(() => {
+            return storage.setItem(room_id, { handle: roomHandle, service: msg.service }).then(() => {
               // and store the room ID info so we don't create dupe rooms
               return storage.setItem(ghost, meta)
             }).then(()=>meta);
           })
         }
-      }).then(({room_id}) => {
+      }).then((meta) => {
         console.log('!!!!!!!!sending message', msg.message);
 
         // TODO Ultimately this should move into the createRoom block. Also, it
         // can probably just be passed as an option to createRoom
-        intent.setRoomName(room_id, fileRecipient + " (iMsg)");
+        intent.setRoomName(meta.room_id, fileRecipient + " (iMsg)");
 
         // let's mark as sent early, because this is important for preventing
         // duplicate messages showing up. i want to make sure this happens...
@@ -148,9 +163,9 @@ module.exports = function() {
         // if we host this close (LAN) to the homeserver then maybe the
         // intent.sendText will succeed very reliably anyway.
         return markSent().then(function() {
-          return sendMsgIntent.sendText(room_id, msg.message).then(function() {
+          return sendMsgIntent.sendText(meta.room_id, msg.message).then(function() {
             // XXX need to check first if the owner is already in the room
-            intent.invite(room_id, config.owner).then(function() {
+            intent.invite(meta.room_id, config.owner).then(function() {
               console.log('invited user', config.owner);
             }).catch(function(err) {
               console.log('failed to invite, user probably already in the room');

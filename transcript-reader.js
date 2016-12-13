@@ -8,10 +8,10 @@ const crypto = require('crypto');
 const createHash = (input) => 
   crypto.createHash('md5').update(input).digest("hex")
 
-const normalize = ({message, date, sender, subject}) => ({
-  hash: createHash(message+date+sender+subject),
+const normalize = ({message, date, sender, subject, service}) => ({
+  hash: createHash(message+date+sender+subject+service),
   isMe: sender.match(/^e:/),
-  message, date, sender, subject
+  message, date, sender, subject, service
 })
 
 module.exports = function(ichatFilePath) {
