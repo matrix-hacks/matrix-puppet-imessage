@@ -1,5 +1,6 @@
 {
   "owner": "@kfatehi:synapse.keyvan.pw",
+  "ownerSelfName": "kfatehi",
   "registrationPath": "imessage-registration.yaml",
   "port": 8090,
   "bridge": {
