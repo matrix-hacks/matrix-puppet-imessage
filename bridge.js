@@ -95,13 +95,17 @@ module.exports = function() {
       let roomHandle = msg.isMe ? msg.subject : msg.sender;
       const ghost = msg.isMe ? "@imessage_"+msg.subject+":"+config.bridge.domain : "@imessage_"+msg.sender+":"+config.bridge.domain;
 
+      // TODO: These various setDisplayName/setRoomName/etc calls should move
+      // into the createRoom block below, but development is in flux at the
+      // moment, so I'm running them every time for a while before moving them
+      // there.
       let intent = bridge.getIntent(ghost);
       if(fileRecipient)
       {
         intent.setDisplayName(fileRecipient + " (iMsg)");
       }
 
-      let selfIntent = bridge.getIntent("@imessage_ME:"+config.bridge.domain);
+      let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
       selfIntent.setDisplayName("Me (from iMsg)");
       let sendMsgIntent = msg.isMe ? selfIntent : intent;
 
@@ -118,6 +122,8 @@ module.exports = function() {
           return meta;
         } else {
           return intent.createRoom({ createAsClient: true }).then(({room_id}) => {
+            intent.setPowerLevel(room_id, config.owner, 100);
+
             let meta = { room_id };
             console.log('created room', meta);
             // we need to store room_id => imessage handle
@@ -130,6 +136,11 @@ module.exports = function() {
         }
       }).then(({room_id}) => {
         console.log('!!!!!!!!sending message', msg.message);
+
+        // TODO Ultimately this should move into the createRoom block. Also, it
+        // can probably just be passed as an option to createRoom
+        intent.setRoomName(room_id, fileRecipient + " (iMsg)");
+
         // let's mark as sent early, because this is important for preventing
         // duplicate messages showing up. i want to make sure this happens...
         // XXX but it is a little shitty to do this now, before actually knowing
