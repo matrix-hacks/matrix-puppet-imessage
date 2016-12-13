@@ -102,7 +102,7 @@ module.exports = function() {
       let intent = bridge.getIntent(ghost);
       if(fileRecipient)
       {
-        intent.setDisplayName(fileRecipient + " (iMsg)");
+        intent.setDisplayName(fileRecipient);
       }
 
       let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
