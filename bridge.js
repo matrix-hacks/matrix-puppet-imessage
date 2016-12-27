@@ -133,8 +133,6 @@ module.exports = function() {
           return meta;
         } else {
           return intent.createRoom({ createAsClient: true }).then(({room_id}) => {
-            intent.setPowerLevel(room_id, config.owner, 100);
-
             let meta = {
               room_id,
               "service": msg.service
@@ -155,6 +153,7 @@ module.exports = function() {
         // TODO Ultimately this should move into the createRoom block. Also, it
         // can probably just be passed as an option to createRoom
         intent.setRoomName(meta.room_id, fileRecipient + " (iMsg)");
+        intent.setPowerLevel(meta.room_id, config.owner, 100);
 
         // let's mark as sent early, because this is important for preventing
         // duplicate messages showing up. i want to make sure this happens...
@@ -163,7 +162,7 @@ module.exports = function() {
         // if we host this close (LAN) to the homeserver then maybe the
         // intent.sendText will succeed very reliably anyway.
         return markSent().then(function() {
-          return sendMsgIntent.sendText(meta.room_id, msg.message).then(function() {
+          return sendMsgIntent.sendMessage(meta.room_id, { body: msg.message, msgtype: "m.notice" } ).then(function() {
             // XXX need to check first if the owner is already in the room
             intent.invite(meta.room_id, config.owner).then(function() {
               console.log('invited user', config.owner);
