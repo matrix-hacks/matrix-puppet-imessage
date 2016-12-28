@@ -149,7 +149,6 @@ module.exports = function() {
       // versions.
       let intent = bridge.getIntent(ghost);
 
-      var displayName;
       if(fileRecipient)
       {
         intent.setDisplayName(fileRecipient);
@@ -192,16 +191,20 @@ module.exports = function() {
           console.log("joined room " + meta.room_id);
 
           // TODO Ultimately this should move into the createRoom block.
-          // Alternatively, it can probably just be passed as an option to
-          // createRoom?
           intent.setPowerLevel(meta.room_id, config.owner, 100);
 
           // This legacy code to cleanup old secondary users and room names.
-          // TODO: These can be removed a bit later.
+          // TODO: These can be moved/removed a bit later.
           let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
           selfIntent.leave(meta.room_id);
-          intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms keeps the push notification messages short. If a room name exists, it adds the " in <room name>" to the end of any push notif message.
-          intent.setRoomTopic(meta.room_id, "iMessage");
+          intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms
+          // keeps the push notification messages short. If a room name exists, it
+          // adds the " in <room name>" to the end of any push notif message.
+          // It's also important to keep the rooms to 2 people only to maintain
+          // these short notification messages, otherwise it will start adding
+          // things like " and <user 2> and <user 3>" to the notification
+          // message.
+          intent.setRoomTopic(meta.room_id, "iMessage"); // can probably be moved as an option to the createRoom call.
 
           // This should prevent self-sent messages that originate from matrix from being re-sent to imessage.
           if(msg.isMe)
@@ -239,8 +242,8 @@ module.exports = function() {
     // if there are transient failures communicating with the matrix server,
     // we can try sending again. Important to keep markSent as close to the inside
     // of the promise chain as possible, so that failed attempts are not
-    // prematurely marked as send and have the best opportunity of getting
-    // tried.
+    // prematurely marked as sent and have the best opportunity of getting
+    // retried.
 
   }
 }
