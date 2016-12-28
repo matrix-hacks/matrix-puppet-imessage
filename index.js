@@ -36,6 +36,7 @@ storage.init().then(function() {
       bridge.init().then(function() {
         ready = true
         console.log('ready');
+        bridge.runClient();
         //bridge.handleIncoming({
         //  isNotMe: true,
         //  sender: 'someone',

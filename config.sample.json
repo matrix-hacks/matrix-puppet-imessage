@@ -1,6 +1,7 @@
 {
   "owner": "@kfatehi:synapse.keyvan.pw",
   "ownerSelfName": "kfatehi",
+  "ownerPassword": "your_matrix_password_here",
   "registrationPath": "imessage-registration.yaml",
   "port": 8090,
   "bridge": {
