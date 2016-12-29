@@ -72,18 +72,25 @@ storage.init().then(function() {
     if ( ready ) {
       // go thru each msg, if skip noop, else relay+skip
       TR(filepath).getMessages().map(msg => {
-        return storage.getItem(msg.hash).then((meta) => {
-          let shouldSkip = meta && meta.skip;
-          let shouldRelay = !shouldSkip;
-          if (shouldRelay) {
-            let markSkip = ({hash, sender, message}) => () => {
-              //console.log('########## marking skip: ', hash, sender, message);
-              return storage.setItem(hash, {skip: true});
+
+        const processMessage = (msg) => {
+          return storage.getItem(msg.hash).then((meta) => {
+            let shouldSkip = meta && meta.skip;
+            let shouldRelay = !shouldSkip;
+            if (shouldRelay) {
+              return bridge.handleIncoming(msg, fileRecipient)
             }
-            return bridge.handleIncoming(msg, markSkip(msg), fileRecipient)
-          }
-        })
-      }).catch(err=>console.error(err))
+          })
+          .then(()=>storage.setItem(msg.hash, {skip: true}))
+          .catch((err)=>{
+            // poor man's retry
+            console.log(err, 'retrying soon');
+            setTimeout(()=> processMessage(msg), 5000);
+          })
+        }
+
+        return processMessage(msg);
+      })
     } else {
       if (dateString === today) {
         // foreach, mark skip

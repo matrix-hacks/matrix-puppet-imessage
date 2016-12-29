@@ -134,7 +134,7 @@ module.exports = function() {
     });
   };
 
-  this.handleIncoming = (msg, markSent, fileRecipient) => {
+  this.handleIncoming = (msg, fileRecipient) => {
     return new Promise(function(resolve, reject) {
       console.log('handling incoming message from apple', msg);
       let roomHandle = msg.isMe ? msg.subject : msg.sender;
@@ -187,63 +187,46 @@ module.exports = function() {
         }
       }).then((meta) => {
         // Always join our puppetted matrix user to the room.
-        return matrixClient.joinRoom(meta.room_id).done( function() {
+        return matrixClient.joinRoom(meta.room_id).then(() => {
           console.log("joined room " + meta.room_id);
 
           // TODO Ultimately this should move into the createRoom block.
-          intent.setPowerLevel(meta.room_id, config.owner, 100);
-
+          return intent.setPowerLevel(meta.room_id, config.owner, 100);
+        }).then(()=> {
           // This legacy code to cleanup old secondary users and room names.
           // TODO: These can be moved/removed a bit later.
           let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
-          selfIntent.leave(meta.room_id);
-          intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms
+          selfIntent.leave(meta.room_id); // dont catch this promise if it fails.
+        }).then(()=>{
+          return intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms
+        }).then(()=>{
           // keeps the push notification messages short. If a room name exists, it
           // adds the " in <room name>" to the end of any push notif message.
           // It's also important to keep the rooms to 2 people only to maintain
           // these short notification messages, otherwise it will start adding
           // things like " and <user 2> and <user 3>" to the notification
           // message.
-          intent.setRoomTopic(meta.room_id, "iMessage"); // can probably be moved as an option to the createRoom call.
-
+          return intent.setRoomTopic(meta.room_id, "iMessage"); // can probably be moved as an option to the createRoom call.
+        }).then(()=>{
+          console.log('checking if msg is me');
           // This should prevent self-sent messages that originate from matrix from being re-sent to imessage.
-          if(msg.isMe)
-          {
-            if(lastMsgsFromMyself.indexOf(msg.message) != -1 ) // Lol, hacks... there are so many ways this can not work.
-            {
+          if(msg.isMe) {
+            console.log('msg is me');
+            if(lastMsgsFromMyself.indexOf(msg.message) != -1 ) { // Lol, hacks... there are so many ways this can not work.
               console.log("Bailing on mirroring of self-sent message from matrix.");
               console.log("Would result in identical message - perhaps it was already sent using a matrix client?");
-              return markSent(); // TODO: It's not clear to me whether this is actually necessary.
+              return;
             }
           }
 
-          // let's mark as sent early, because this is important for preventing
-          // duplicate messages showing up. i want to make sure this happens...
-          // XXX but it is a little shitty to do this now, before actually knowing
-          // we successfully sent. but for now i would rather prevent dupes, and
-          // if we host this close (LAN) to the homeserver then maybe the
-          // intent.sendText will succeed very reliably anyway.
-          return markSent().then(function() {
-            // If a self-sent message, use the matrix puppet to mirror it over.
-            // Otherwise use the virtual (imessage_*) user that represents the
-            // person we're talking to.
-            var msgSender = msg.isMe ? matrixClient.sendNotice.bind(matrixClient) : intent.sendText.bind(intent);
-            console.log("sending = " + msg.message + " = to " + meta.room_id);
-            return msgSender(meta.room_id, msg.message);
-          });
-        } );
-      }).catch(function(err) {
-        console.log(err);
+          // If a self-sent message, use the matrix puppet to mirror it over.
+          // Otherwise use the virtual (imessage_*) user that represents the
+          // person we're talking to.
+          var msgSender = msg.isMe ? matrixClient.sendNotice.bind(matrixClient) : intent.sendText.bind(intent);
+          console.log("sending = " + msg.message + " = to " + meta.room_id);
+          return msgSender(meta.room_id, msg.message);
+        })
       })
-    });
-
-    // TODO: Somewhere around here (or perhaps in index.js where handleIncoming
-    // is called), we should catch exceptions and schedule a retry? This way
-    // if there are transient failures communicating with the matrix server,
-    // we can try sending again. Important to keep markSent as close to the inside
-    // of the promise chain as possible, so that failed attempts are not
-    // prematurely marked as sent and have the best opportunity of getting
-    // retried.
-
+    })
   }
 }
