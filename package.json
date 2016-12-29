@@ -10,6 +10,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kfatehi/matrix-appservice-imessage.git"
+  },
   "dependencies": {
     "JSONStream": "^1.2.1",
     "bluebird": "^3.4.6",
@@ -20,7 +24,8 @@
     "moment": "^2.17.1",
     "node-persist": "^2.0.7",
     "queue": "^4.0.0",
-    "simple-plist": "^0.2.1"
+    "simple-plist": "^0.2.1",
+    "matrix-js-sdk": "^0.7.2"
   },
   "devDependencies": {
     "chai": "^3.5.0",
