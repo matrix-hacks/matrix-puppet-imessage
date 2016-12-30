@@ -135,97 +135,95 @@ module.exports = function() {
   };
 
   this.handleIncoming = (msg, fileRecipient) => {
-    return new Promise(function(resolve, reject) {
-      console.log('handling incoming message from apple', msg);
-      let roomHandle = msg.isMe ? msg.subject : msg.sender;
+    console.log('handling incoming message from apple', msg);
+    let roomHandle = msg.isMe ? msg.subject : msg.sender;
 
-      //const ghost = msg.isMe ? "@imessage_"+msg.subject+":"+config.bridge.domain : "@imessage_"+msg.sender+":"+config.bridge.domain;
-      const ghost = "@imessage_"+roomHandle+":"+config.bridge.domain;
+    //const ghost = msg.isMe ? "@imessage_"+msg.subject+":"+config.bridge.domain : "@imessage_"+msg.sender+":"+config.bridge.domain;
+    const ghost = "@imessage_"+roomHandle+":"+config.bridge.domain;
 
-      // TODO: These various setDisplayName/setRoomName/etc calls should move
-      // into the createRoom block below, but development is in flux at the
-      // moment, so I'm running them every time for a while before moving them
-      // there. This way we clean up any old/incorrect room settings from prior
-      // versions.
-      let intent = bridge.getIntent(ghost);
+    // TODO: These various setDisplayName/setRoomName/etc calls should move
+    // into the createRoom block below, but development is in flux at the
+    // moment, so I'm running them every time for a while before moving them
+    // there. This way we clean up any old/incorrect room settings from prior
+    // versions.
+    let intent = bridge.getIntent(ghost);
 
-      if(fileRecipient)
-      {
-        intent.setDisplayName(fileRecipient);
-      }
+    if(fileRecipient)
+    {
+      intent.setDisplayName(fileRecipient);
+    }
 
-      return storage.getItem(ghost).then((meta) => {
-        if (meta && meta.room_id) {
-          console.log('found room', meta);
+    return storage.getItem(ghost).then((meta) => {
+      if (meta && meta.room_id) {
+        console.log('found room', meta);
 
-          storage.getItem(meta.room_id).then((handleMeta) => {
-            if (handleMeta && handleMeta.handle) {
-              if (msg.service != handleMeta.service) {
-                console.log("service has changed from " + meta.service + " to " + msg.service + ". persisting...");
-                handleMeta.service = msg.service;
-                storage.setItem(meta.room_id, handleMeta);
-              }
-            }
-          });
-
-          return meta;
-        } else {
-          return intent.createRoom({ createAsClient: true }).then(({room_id}) => {
-            let meta = {
-              room_id,
-              "service": msg.service
-            };
-
-            console.log('created room', meta);
-            // we need to store room_id => imessage handle
-            // in order to fulfill responses from the matrix user
-            return storage.setItem(room_id, { handle: roomHandle, service: msg.service }).then(() => {
-              // and store the room ID info so we don't create dupe rooms
-              return storage.setItem(ghost, meta)
-            }).then(()=>meta);
-          })
-        }
-      }).then((meta) => {
-        // Always join our puppetted matrix user to the room.
-        return matrixClient.joinRoom(meta.room_id).then(() => {
-          console.log("joined room " + meta.room_id);
-
-          // TODO Ultimately this should move into the createRoom block.
-          return intent.setPowerLevel(meta.room_id, config.owner, 100);
-        }).then(()=> {
-          // This legacy code to cleanup old secondary users and room names.
-          // TODO: These can be moved/removed a bit later.
-          let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
-          selfIntent.leave(meta.room_id); // dont catch this promise if it fails.
-        }).then(()=>{
-          return intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms
-        }).then(()=>{
-          // keeps the push notification messages short. If a room name exists, it
-          // adds the " in <room name>" to the end of any push notif message.
-          // It's also important to keep the rooms to 2 people only to maintain
-          // these short notification messages, otherwise it will start adding
-          // things like " and <user 2> and <user 3>" to the notification
-          // message.
-          return intent.setRoomTopic(meta.room_id, "iMessage"); // can probably be moved as an option to the createRoom call.
-        }).then(()=>{
-          console.log('checking if msg is me');
-          // This should prevent self-sent messages that originate from matrix from being re-sent to imessage.
-          if(msg.isMe) {
-            console.log('msg is me');
-            if(lastMsgsFromMyself.indexOf(msg.message) != -1 ) { // Lol, hacks... there are so many ways this can not work.
-              console.log("Bailing on mirroring of self-sent message from matrix.");
-              console.log("Would result in identical message - perhaps it was already sent using a matrix client?");
-              return;
+        storage.getItem(meta.room_id).then((handleMeta) => {
+          if (handleMeta && handleMeta.handle) {
+            if (msg.service != handleMeta.service) {
+              console.log("service has changed from " + meta.service + " to " + msg.service + ". persisting...");
+              handleMeta.service = msg.service;
+              storage.setItem(meta.room_id, handleMeta);
             }
           }
+        });
 
-          // If a self-sent message, use the matrix puppet to mirror it over.
-          // Otherwise use the virtual (imessage_*) user that represents the
-          // person we're talking to.
-          var msgSender = msg.isMe ? matrixClient.sendNotice.bind(matrixClient) : intent.sendText.bind(intent);
-          console.log("sending = " + msg.message + " = to " + meta.room_id);
-          return msgSender(meta.room_id, msg.message);
+        return meta;
+      } else {
+        return intent.createRoom({ createAsClient: true }).then(({room_id}) => {
+          let meta = {
+            room_id,
+            "service": msg.service
+          };
+
+          console.log('created room', meta);
+          // we need to store room_id => imessage handle
+          // in order to fulfill responses from the matrix user
+          return storage.setItem(room_id, { handle: roomHandle, service: msg.service }).then(() => {
+            // and store the room ID info so we don't create dupe rooms
+            return storage.setItem(ghost, meta)
+          }).then(()=>meta);
         })
+      }
+    }).then((meta) => {
+      // Always join our puppetted matrix user to the room.
+      return matrixClient.joinRoom(meta.room_id).then(() => {
+        console.log("joined room " + meta.room_id);
+
+        // TODO Ultimately this should move into the createRoom block.
+        return intent.setPowerLevel(meta.room_id, config.owner, 100);
+      }).then(()=> {
+        // This legacy code to cleanup old secondary users and room names.
+        // TODO: These can be moved/removed a bit later.
+        let selfIntent = bridge.getIntent("@imessage_" + config.ownerSelfName + ":" + config.bridge.domain);
+        selfIntent.leave(meta.room_id); // dont catch this promise if it fails.
+      }).then(()=>{
+        return intent.setRoomName(meta.room_id, ""); // NOTE: Using unamed rooms
+      }).then(()=>{
+        // keeps the push notification messages short. If a room name exists, it
+        // adds the " in <room name>" to the end of any push notif message.
+        // It's also important to keep the rooms to 2 people only to maintain
+        // these short notification messages, otherwise it will start adding
+        // things like " and <user 2> and <user 3>" to the notification
+        // message.
+        return intent.setRoomTopic(meta.room_id, "iMessage"); // can probably be moved as an option to the createRoom call.
+      }).then(()=>{
+        console.log('checking if msg is me');
+        // This should prevent self-sent messages that originate from matrix from being re-sent to imessage.
+        if(msg.isMe) {
+          console.log('msg is me');
+          if(lastMsgsFromMyself.indexOf(msg.message) != -1 ) { // Lol, hacks... there are so many ways this can not work.
+            console.log("Bailing on mirroring of self-sent message from matrix.");
+            console.log("Would result in identical message - perhaps it was already sent using a matrix client?");
+            return;
+          }
+        }
+
+        // If a self-sent message, use the matrix puppet to mirror it over.
+        // Otherwise use the virtual (imessage_*) user that represents the
+        // person we're talking to.
+        var msgSender = msg.isMe ? matrixClient.sendNotice.bind(matrixClient) : intent.sendText.bind(intent);
+        console.log("sending = " + msg.message + " = to " + meta.room_id);
+        return msgSender(meta.room_id, msg.message);
       })
     })
   }

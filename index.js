@@ -79,9 +79,14 @@ storage.init().then(function() {
             let shouldRelay = !shouldSkip;
             if (shouldRelay) {
               return bridge.handleIncoming(msg, fileRecipient)
+            } else {
+              console.log('skiping message: ', msg.sender, msg.message);
             }
           })
-          .then(()=>storage.setItem(msg.hash, {skip: true}))
+          .then(()=>{
+            console.log('marking skip: ', msg.hash, msg.sender, msg.message);
+            return storage.setItem(msg.hash, {skip: true});
+          })
           .catch((err)=>{
             // poor man's retry
             console.log(err, 'retrying soon');
@@ -96,7 +101,7 @@ storage.init().then(function() {
         // foreach, mark skip
         q.push(function(cb) {
           TR(filepath).getMessages().map(msg => {
-            //console.log('marking skip: ', path.basename(filepath), msg.sender, msg.message);
+            console.log('marking skip [initial scan]: ', path.basename(filepath), msg.sender, msg.message);
             return storage.setItem(msg.hash, {skip: true})
           }).catch(console.error).finally(cb);
         });
