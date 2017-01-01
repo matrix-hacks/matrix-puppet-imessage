@@ -1,12 +1,10 @@
 {
-  "owner": "@kfatehi:synapse.keyvan.pw",
-  "ownerSelfName": "kfatehi",
-  "ownerPassword": "your_matrix_password_here",
   "registrationPath": "imessage-registration.yaml",
+  "ichatArchives": "~/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive/**/*.ichat",
   "port": 8090,
   "bridge": {
-    "homeserverUrl":"https://synapse.keyvan.pw",
-    "domain": "synapse.keyvan.pw",
+    "homeserverUrl":"https://yourserver.com",
+    "domain": "yourserver.com",
     "registration": "imessage-registration.yaml"
   }
 }

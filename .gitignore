@@ -1,6 +1,5 @@
-node_modules
-logs/
-persist/
 *.db
-*.yaml
+persist
 config.json
+node_modules
+*.yaml
