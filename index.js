@@ -22,7 +22,7 @@ const puppet = new Puppet(path.join(__dirname, './config.json' ));
 const nodePersist = require('node-persist');
 
 const ichat2json = path.join(__dirname, 'bin', 'ichat2json');
-const createHash = (input) => 
+const createHash = (input) =>
   crypto.createHash('md5').update(input).digest("hex")
 
 const normalize = ({message, date, sender, subject, service}) => ({
@@ -236,13 +236,25 @@ class App extends MatrixPuppetBridgeBase {
     return " \\u2063$";
   }
   getServicePrefix() {
-    return "imessage";
+    return "__mpb__imessage";
   }
   getThirdPartyRoomDataById(id) {
     return Promise.resolve({
       name: this.roomNames[id],
       topic: 'iMessage'
     });
+  }
+  getThirdPartyRoomIdFromMatrixRoomId(id) {
+    const room = this.puppet.getClient().getRoom(id);
+    const aliases = room.getAliases();
+    for (var i in aliases) {
+      var matches = aliases[i].match(/^#__mpb__imessage_(.+):/);
+      if ( matches ) {
+        var msgId = matches[1];
+        return msgId;
+      }
+    }
+    return null;
   }
   sendMessageAsPuppetToThirdPartyRoomWithId(id, text) {
     return this.storage.getItem(id+':service').then(service => {
