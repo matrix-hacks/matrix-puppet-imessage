@@ -232,10 +232,10 @@ class App extends MatrixPuppetBridgeBase {
     })
   }
   defaultDeduplicationTag() {
-    return "\u2063";
+    return " \u2063";
   }
   defaultDeduplicationTagPattern() {
-    return "\\u2063$";
+    return " \\u2063$";
   }
   getServicePrefix() {
     return "imessage";
