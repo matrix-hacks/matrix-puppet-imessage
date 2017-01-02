@@ -230,10 +230,20 @@ class App extends MatrixPuppetBridgeBase {
     })
   }
   defaultDeduplicationTag() {
-    return " \u2063";
+    // https://en.wikipedia.org/wiki/Whitespace_character
+    //return " \u2063";
+    //return " \u1680"; // Produces a --
+    //return " \u0017"; // ETB Doesn't work
+    //return " \u2000"; // Shows a space in everything i've tried it with, which is fine.
+    return " \ufeff"; // Zero width non-breaking space
   }
   defaultDeduplicationTagPattern() {
-    return " \\u2063$";
+    // https://en.wikipedia.org/wiki/Whitespace_character
+    //return " \\u2063$";
+    //return " \\u1680$"; // Produces a --
+    //return " \\u0017$"; // ETB Doesn't work
+    //return " \\u2000$"; // Shows a space in everything i've tried it with, which is fine.
+    return " \\ufeff$"; // Zero width non-breaking space
   }
   getServicePrefix() {
     return "__mpb__imessage";
