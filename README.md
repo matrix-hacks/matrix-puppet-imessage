@@ -22,7 +22,7 @@ Copy `config.sample.json` to `config.json` and update it to match your setup
 
 ## register the app service
 
-Generate an `imessage-registration.yaml` file with `node index.js -r -u "https://your.matrix.homeserver"`
+Generate an `imessage-registration.yaml` file with `node index.js -r -u "http://your-bridge-server:8090"`
 
 Note: The 'registration' setting in the config.json needs to set to the path of this file. By default, it already is.
 
@@ -35,7 +35,4 @@ Launch the bridge with ```node index.js```.
 Restart your HS.
 
 # TODO
-
-* We currently run a bunch of code every time a message comes in (setRoomTitle, setDisplayName, etc), which makes the bridge very chatty with the HS. This code can be moved into the createRoom block once we've 100% settled on how the room title, display name, etc should work. In the meantime, it eases development.
 * Be able to originate conversations from the Matrix side.
-* Use the roomStore and userStore features instead of node-persist
