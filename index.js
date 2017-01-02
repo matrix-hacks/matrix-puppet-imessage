@@ -211,10 +211,8 @@ class App extends MatrixPuppetBridgeBase {
 
         let ready = false;
         const watcherOptions = { persistent: true, ignoreInitial: false }
-        console.log("2laksdfj " + config.ichatArchives);
         config.ichatArchives = config.ichatArchives.replace(/^~/, HOME);
         const watcher = chokidar.watch(config.ichatArchives, watcherOptions);
-        console.log("4laksdfj");
         watcher.on('add', processFile);
         watcher.on('change', processFile);
         watcher.on('ready', () => {
