@@ -1,20 +1,62 @@
 {
   "name": "matrix-appservice-imessage",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "DEBUG=matrix-puppet:* node index.js",
+    "test": "echo \"no tests at this time\"; exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "matrix",
+    "imessage"
+  ],
+  "contributors": [
+    "Keyvan Fatehi",
+    "Andrew Johnson"
+  ],
   "license": "ISC",
   "dependencies": {
     "JSONStream": "^1.3.0",
     "bluebird": "^3.4.7",
     "chokidar": "^1.6.1",
+    "matrix-puppet-bridge": "^1.2.0",
     "moment": "^2.17.1",
     "node-persist": "^2.0.7",
     "queue": "^4.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2"
+  },
+  "eslintConfig": {
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "extends": "eslint:recommended",
+    "rules": {
+      "no-console": 0,
+      "indent": [
+        "error",
+        2,
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "linebreak-style": [
+        "error",
+        "unix"
+      ],
+      "semi": [
+        "error",
+        "always"
+      ],
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    }
   }
 }

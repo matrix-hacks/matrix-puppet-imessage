@@ -23,13 +23,13 @@ const nodePersist = require('node-persist');
 
 const ichat2json = path.join(__dirname, 'bin', 'ichat2json');
 const createHash = (input) =>
-  crypto.createHash('md5').update(input).digest("hex")
+  crypto.createHash('md5').update(input).digest("hex");
 
 const normalize = ({message, date, sender, subject, service}) => ({
   hash: createHash(message+date+sender+subject+service),
   isMe: sender.match(/^e:/),
   message, date, sender, subject, service
-})
+});
 
 const TR = function(ichatFilePath) {
   return {
@@ -40,9 +40,9 @@ const TR = function(ichatFilePath) {
         var proc = spawn(ichat2json, [ichatFilePath]);
         proc.stdout
           .pipe(JSONStream.parse())
-          .on('data', msg => messages.push(normalize(msg)))
+          .on('data', msg => messages.push(normalize(msg)));
         proc.stderr
-          .on('data', data => errors.push(data.toString()))
+          .on('data', data => errors.push(data.toString()));
         proc.on('exit', function(status) {
           if (status != 0) {
             reject(errors.join());
@@ -52,12 +52,12 @@ const TR = function(ichatFilePath) {
         });
       });
     }
-  }
-}
+  };
+};
 
 const escapeString = (str) => {
-  return str.replace(/[\\"]/g, '\\$&')
-}
+  return str.replace(/[\\"]/g, '\\$&');
+};
 
 const iMessageSend = function(to, _message, _method) {
   let method = _method === 'sms' ? sms : imessage;
@@ -93,24 +93,18 @@ const iMessageSend = function(to, _message, _method) {
         if (exitCode != 0)  {
           reject(new Error('exited nonzero'));
         } else {
-          resolve('SENT')
+          resolve('SENT');
         }
-      })
+      });
     }
   });
-}
+};
 
 class App extends MatrixPuppetBridgeBase {
   // return a promise that resolves when you are ready to start
   // serving new events from third party service
   initThirdPartyClient() {
     this.roomNames = {};
-
-    // XXX DEBUG
-    //setTimeout(() =>{
-    //  this.getOrCreateMatrixRoomFromThirdPartyRoomId('+19498875144');
-    //}, 1000);
-
     const storage = nodePersist.create({
       dir:'persist/messages',
       stringify: JSON.stringify,
@@ -120,7 +114,7 @@ class App extends MatrixPuppetBridgeBase {
       continuous: true,
       interval: false,
       ttl: '24h'
-    })
+    });
     this.storage = storage;
 
     const q = queue();
@@ -128,7 +122,7 @@ class App extends MatrixPuppetBridgeBase {
     q.concurrency = 1; // number of ichat2json subprocesses you are willing to spawn at once
 
     return storage.init().then(() => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         /** 
          * Basic algorithm for process() function:
          *
@@ -142,7 +136,7 @@ class App extends MatrixPuppetBridgeBase {
          * if not skip, do relay, mark as skip
          */
         const processFile = (filepath) => {
-          console.log('processFile', filepath)
+          console.log('processFile', filepath);
           var parts = filepath.split(path.sep);
           var len = parts.length;
           let [ dateString ] = parts.slice(len-2, len-1);
@@ -150,7 +144,7 @@ class App extends MatrixPuppetBridgeBase {
           let [ fileRecipient ] = filename.split(" on ");
           //console.log("File recipient: " + fileRecipient);
 
-          var today = moment().format('YYYY-MM-DD')
+          var today = moment().format('YYYY-MM-DD');
 
           if ( ready ) {
             // go thru each msg, if skip noop, else relay+skip
@@ -161,7 +155,7 @@ class App extends MatrixPuppetBridgeBase {
                   let shouldSkip = meta && meta.skip;
                   let shouldRelay = !shouldSkip;
                   if (shouldRelay) {
-                    const { hash, isMe, message, date, sender, subject, service } = msg;
+                    const { hash, isMe, message, sender, subject, service } = msg;
                     const roomId = isMe ? subject : sender;
                     this.roomNames[roomId] = fileRecipient;
 
@@ -169,12 +163,10 @@ class App extends MatrixPuppetBridgeBase {
                     // this is either SMS or iMessage
                     return this.storage.setItem(roomId+':service', service).then(() => {
                       return this.handleThirdPartyRoomMessage({
-                        thirdParty: {
-                          roomId,
-                          messageId: hash,
-                          senderName: fileRecipient,
-                          senderId: isMe ? undefined : roomId,
-                        },
+                        roomId,
+                        messageId: hash,
+                        senderName: fileRecipient,
+                        senderId: isMe ? undefined : roomId,
                         text: message
                       });
                     });
@@ -191,26 +183,26 @@ class App extends MatrixPuppetBridgeBase {
                     // poor man's retry
                     console.log(err, 'retrying soon');
                     setTimeout(()=> processMessage(msg), 5000);
-                  })
-              }
+                  });
+              };
 
               return processMessage(msg);
-            })
+            });
           } else {
             if (dateString === today) {
               // foreach, mark skip
               q.push(function(cb) {
                 TR(filepath).getMessages().map(msg => {
                   console.log('marking skip [initial scan]: ', path.basename(filepath), msg.sender, msg.message);
-                  return storage.setItem(msg.hash, {skip: true})
+                  return storage.setItem(msg.hash, {skip: true});
                 }).catch(console.error).finally(cb);
               });
             }
           }
-        }
+        };
 
         let ready = false;
-        const watcherOptions = { persistent: true, ignoreInitial: false }
+        const watcherOptions = { persistent: true, ignoreInitial: false };
         config.ichatArchives = config.ichatArchives.replace(/^~/, HOME);
         const watcher = chokidar.watch(config.ichatArchives, watcherOptions);
         watcher.on('add', processFile);
@@ -218,16 +210,15 @@ class App extends MatrixPuppetBridgeBase {
         watcher.on('ready', () => {
           console.log("we get here?");
           q.on('end', function() {
-            ready = true
+            ready = true;
             console.log('ready');
             resolve();  // let the bridge start up
 
           });
           q.start();
         });
-
       });
-    })
+    });
   }
   defaultDeduplicationTag() {
     // https://en.wikipedia.org/wiki/Whitespace_character
@@ -269,7 +260,7 @@ class App extends MatrixPuppetBridgeBase {
   sendMessageAsPuppetToThirdPartyRoomWithId(id, text) {
     return this.storage.getItem(id+':service').then(service => {
       return iMessageSend(id, text, service != "iMessage" ? "sms" : "iMessage");
-    })
+    });
   }
 }
 
