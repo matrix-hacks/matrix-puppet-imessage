@@ -237,7 +237,7 @@ class App extends MatrixPuppetBridgeBase {
     return " \\ufeff$"; // Zero width non-breaking space
   }
   getServicePrefix() {
-    return "__mpb__imessage";
+    return "imessage";
   }
   getThirdPartyRoomDataById(id) {
     return Promise.resolve({
@@ -249,7 +249,7 @@ class App extends MatrixPuppetBridgeBase {
     const room = this.puppet.getClient().getRoom(id);
     const aliases = room.getAliases();
     for (var i in aliases) {
-      var matches = aliases[i].match(/^#__mpb__imessage_(.+):/);
+      var matches = aliases[i].match(/^#imessage_(.+):/);
       if ( matches ) {
         var msgId = matches[1];
         return msgId;
@@ -273,7 +273,7 @@ new Cli({
       reg.setHomeserverToken(AppServiceRegistration.generateToken());
       reg.setAppServiceToken(AppServiceRegistration.generateToken());
       reg.setSenderLocalpart("imessagebot");
-      reg.addRegexPattern("users", "@__mpb__imessage_.*", true);
+      reg.addRegexPattern("users", "@imessage_.*", true);
       callback(reg);
     }).catch(err=>{
       console.error(err.message);
