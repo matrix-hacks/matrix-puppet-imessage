@@ -1,14 +1,11 @@
 const path = require('path');
-const crypto = require('crypto');
-const spawn = require('child_process').spawn;
 const Promise = require('bluebird');
-const JSONStream = require('JSONStream');
 const queue = require('queue');
 const chokidar = require('chokidar');
 const HOME = require('os').homedir();
 const moment = require('moment');
-const sms = 'service "SMS"';
-const imessage = '(service 1 whose service type is iMessage)';
+const TR = require('./src/transcript-reader');
+const iMessageSend = require('./src/imessage-send');
 
 const config = require('./config.json');
 const {
@@ -21,84 +18,6 @@ const {
 const puppet = new Puppet(path.join(__dirname, './config.json' ));
 const nodePersist = require('node-persist');
 
-const ichat2json = path.join(__dirname, 'bin', 'ichat2json');
-const createHash = (input) =>
-  crypto.createHash('md5').update(input).digest("hex");
-
-const normalize = ({message, date, sender, subject, service}) => ({
-  hash: createHash(message+date+sender+subject+service),
-  isMe: sender.match(/^e:/),
-  message, date, sender, subject, service
-});
-
-const TR = function(ichatFilePath) {
-  return {
-    getMessages: () => {
-      return new Promise(function(resolve, reject) {
-        var messages = [];
-        var errors = [];
-        var proc = spawn(ichat2json, [ichatFilePath]);
-        proc.stdout
-          .pipe(JSONStream.parse())
-          .on('data', msg => messages.push(normalize(msg)));
-        proc.stderr
-          .on('data', data => errors.push(data.toString()));
-        proc.on('exit', function(status) {
-          if (status != 0) {
-            reject(errors.join());
-          } else {
-            resolve(messages);
-          }
-        });
-      });
-    }
-  };
-};
-
-const escapeString = (str) => {
-  return str.replace(/[\\"]/g, '\\$&');
-};
-
-const iMessageSend = function(to, _message, _method) {
-  let method = _method === 'sms' ? sms : imessage;
-  let message =  escapeString(_message);
-  console.log('escaped to', message);
-  let args = ['-e'];
-
-  // If string contains letters, it must be a contact name so
-  // find the relevant phone number first
-  if (/[a-z]/i.test(to)) {
-    args.push(`tell application "Contacts"
-    set i to value of phone 1 of (person 1 whose name = "${to}")
-    end tell
-    tell application "Messages"
-    send "${message}" to buddy i of ${method}
-    end tell`);
-  } else {
-    args.push(`tell application "Messages"
-    send "${message}" to buddy "${to}" of ${method}
-    end tell`);
-  }
-  console.log('full applescript', args[1]);
-
-  return new Promise(function(resolve, reject) {
-    // Check user input
-    if (!to) reject(new Error('You didn\'t enter a recipient!'));
-    else if (!message) reject(new Error('You didn\'t enter a message!'));
-    else {
-      var proc = spawn('/usr/bin/osascript', args );
-      proc.stdout.pipe(process.stdout);
-      proc.stderr.pipe(process.stderr);
-      proc.on('exit', function(exitCode)  {
-        if (exitCode != 0)  {
-          reject(new Error('exited nonzero'));
-        } else {
-          resolve('SENT');
-        }
-      });
-    }
-  });
-};
 
 class App extends MatrixPuppetBridgeBase {
   // return a promise that resolves when you are ready to start
