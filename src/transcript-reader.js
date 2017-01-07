@@ -1,5 +1,6 @@
+const Promise = require('bluebird');
 const path = require('path');
-const ichat2json = path.join(__dirname, 'bin', 'ichat2json');
+const ichat2json = path.join(__dirname, '..', 'bin', 'ichat2json');
 const JSONStream = require('JSONStream');
 const spawn = require('child_process').spawn;
 const crypto = require('crypto');
@@ -20,6 +21,7 @@ module.exports = function(ichatFilePath) {
         var messages = [];
         var errors = [];
         var proc = spawn(ichat2json, [ichatFilePath]);
+        console.log('spawning');
         proc.stdout
           .pipe(JSONStream.parse())
           .on('data', msg => messages.push(normalize(msg)));
@@ -27,8 +29,10 @@ module.exports = function(ichatFilePath) {
           .on('data', data => errors.push(data.toString()));
         proc.on('exit', function(status) {
           if (status != 0) {
+            console.error(errors);
             reject(errors.join());
           } else {
+            console.log('resolving', messages);
             resolve(messages);
           }
         });
