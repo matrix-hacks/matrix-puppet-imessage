@@ -8,11 +8,13 @@ const crypto = require('crypto');
 const createHash = (input) =>
   crypto.createHash('md5').update(input).digest("hex");
 
-const normalize = ({message, date, sender, subject, service}) => ({
-  hash: createHash(message+date+sender+subject+service),
-  isMe: sender.match(/^e:/),
-  message, date, sender, subject, service
-});
+const normalize = (msg) => {
+  const {message, date, sender, subject, service} = msg;
+  return Object.assign({},{
+    hash: createHash(message+date+sender+subject+service),
+    senderIsMe: sender.match(/^e:/),
+  }, msg);
+};
 
 module.exports = function(ichatFilePath) {
   return {
@@ -32,7 +34,6 @@ module.exports = function(ichatFilePath) {
             console.error(errors);
             reject(errors.join());
           } else {
-            console.log('resolving', messages);
             resolve(messages);
           }
         });

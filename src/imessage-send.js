@@ -47,3 +47,7 @@ module.exports = function(to, _message, _method) {
   });
 };
 
+if (!module.parent) {
+  module.exports('***REMOVED***', "test Morty's Math Teacher", 'iMessage');
+}
+

@@ -1,6 +1,7 @@
 const Promise = require('bluebird');
 const path = require('path');
 const iMessageSend = require('./imessage-send');
+const iMessageSendGroup = require('./imessage-send-group');
 const EventEmitter = require('events').EventEmitter;
 const queue = require('queue');
 const chokidar = require('chokidar');
@@ -21,6 +22,9 @@ const nodePersist = require('node-persist');
 class Client extends EventEmitter {
   sendMessage (id, text, service) {
     return iMessageSend(id, text, service != "iMessage" ? "sms" : "iMessage");
+  }
+  sendGroupMessage (handles, text) {
+    return iMessageSendGroup(handles, text);
   }
   init (ichatArchives) {
     const storage = nodePersist.create({
