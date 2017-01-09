@@ -71,6 +71,11 @@ class App extends MatrixPuppetBridgeBase {
       message = `[This iMessage has ${files.length} attachments!]\n${message}`;
     }
 
+    // too hard to get one thru applescripting contacts, just allow null
+    // so that we can use bang commands and have them persist forever.
+    // by preventing base class from calling setDisplayName when senderName is null
+    this.allowNullSenderName = true;
+
     return Promise.all([
       this.setRoomService(roomId, service),
       this.handleThirdPartyRoomMessage({
@@ -143,7 +148,7 @@ class App extends MatrixPuppetBridgeBase {
     } else if ( command === 'rename' ) {
       const [id, ...rest] = body.split(' ');
       const ghost = this.getIntentFromThirdPartySenderId(id);
-      return ghost.setDisplayName(rest.join(' ')).error((err)=>{
+      return ghost.setDisplayName(rest.join(' ')).then(()=>{},(err)=>{
         reply(err.stack);
       });
     } else {
