@@ -115,10 +115,10 @@ class App extends MatrixPuppetBridgeBase {
         let tpid = this.getThirdPartyUserIdFromMatrixGhostId(gid);
         return tpid ? [...acc, tpid] : acc;
       },[]);
-      return {
+      return Promise.resolve({
         isGroup: true,
         handles
-      };
+      });
     } else {
       return this.getRoomService(id).then(service => ({
         isGroup: false,
