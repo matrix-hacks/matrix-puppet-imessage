@@ -20,11 +20,11 @@ const nodePersist = require('node-persist');
  * Sending works by AppleScript
  */
 class Client extends EventEmitter {
-  sendMessage (id, text, service) {
-    return iMessageSend(id, text, service != "iMessage" ? "sms" : "iMessage");
+  sendMessage (id, service, text, file) {
+    return iMessageSend(id, service != "iMessage" ? "sms" : "iMessage", text, file);
   }
-  sendGroupMessage (handles, text) {
-    return iMessageSendGroup(handles, text);
+  sendGroupMessage (handles, text, file) {
+    return iMessageSendGroup(handles, text, file);
   }
   init (ichatArchives) {
     const storage = nodePersist.create({

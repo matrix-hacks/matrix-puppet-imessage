@@ -6,11 +6,23 @@ const escapeString = (str) => {
   return str.replace(/[\\"]/g, '\\$&');
 };
 
-module.exports = function(to, _message, _method) {
+module.exports = function(to, _method, _message, file) {
   let method = _method === 'sms' ? sms : imessage;
   let message =  escapeString(_message);
   console.log('escaped to', message);
   let args = ['-e'];
+
+  const attachment = (method, buddy) => {
+    if ( file ){
+      return `
+      set theAttachment1 to POSIX file "${file}"
+      send theAttachment1 to buddy ${buddy} of ${method}
+      `;
+    } else {
+      return '';
+    }
+  };
+
 
   // If string contains letters, it must be a contact name so
   // find the relevant phone number first
@@ -19,10 +31,12 @@ module.exports = function(to, _message, _method) {
     set i to value of phone 1 of (person 1 whose name = "${to}")
     end tell
     tell application "Messages"
+    ${attachment(method, 'i')}
     send "${message}" to buddy i of ${method}
     end tell`);
   } else {
     args.push(`tell application "Messages"
+    ${attachment(method, '"'+to+'"')}
     send "${message}" to buddy "${to}" of ${method}
     end tell`);
   }
@@ -48,6 +62,6 @@ module.exports = function(to, _message, _method) {
 };
 
 if (!module.parent) {
-  module.exports('***REMOVED***', "test Morty's Math Teacher", 'iMessage');
+  module.exports('***REMOVED***', "iMessage", "test Morty's Math Teacher (no image)");
+  module.exports('***REMOVED***', "iMessage", "test Morty's Math Teacher (with image)", __dirname+"/../mr-goldenfold.png");
 }
-

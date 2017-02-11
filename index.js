@@ -25,16 +25,6 @@ class App extends MatrixPuppetBridgeBase {
     this.roomData = {};
     this.client = new Client();
     this.client.on('message', m => this.handleThirdPartyClientMessage(m));
-
-
-    const matrixClient = this.puppet.getClient();
-
-    this.matrixRoomMembers = {};
-    matrixClient.on("RoomState.members", (event, state, _member) => {
-      this.matrixRoomMembers[state.roomId] = Object.keys(state.members);
-      console.log('room', state.roomId, 'members updated');
-    });
-
     return this.client.init(config.ichatArchives);
   }
   handleThirdPartyClientMessage(msg) {
@@ -115,24 +105,38 @@ class App extends MatrixPuppetBridgeBase {
   getRoomService(rid) {
     return this.client.storage.getItem(rid+':service');
   }
-  sendMessageAsPuppetToThirdPartyRoomWithId(id, text, matrixEvent) {
+  prepareToSend(id, matrixEvent) {
     if ( id.match(/^chat/) ) {
       // it's a multi party chat... we need to send to participants list
       // luckily we can find out about all the ghosts (they get preloaded)
       // and pull their handles down and use that to chat with the group
-      
-      const roomMembers = this.matrixRoomMembers[matrixEvent.room_id];
+      const roomMembers = this.puppet.getMatrixRoomMembers(matrixEvent.room_id);
       const handles = roomMembers.reduce((acc, gid) => {
         let tpid = this.getThirdPartyUserIdFromMatrixGhostId(gid);
         return tpid ? [...acc, tpid] : acc;
       },[]);
-
-      return this.client.sendGroupMessage(handles, text);
+      return {
+        isGroup: true,
+        handles
+      };
     } else {
-      return this.getRoomService(id).then(svc => {
-        return this.client.sendMessage(id, text, svc);
-      });
+      return this.getRoomService(id).then(service => ({
+        isGroup: false,
+        service
+      }));
     }
+  }
+  sendMessageAsPuppetToThirdPartyRoomWithId(id, text, matrixEvent) {
+    const { sendGroupMessage, sendMessage } = this.client;
+    return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
+      return isGroup ? sendGroupMessage(handles, text) : sendMessage(id, service, text);
+    });
+  }
+  sendPictureMessageAsPuppetToThirdPartyRoomWithId(id, text, img, matrixEvent) {
+    const { sendGroupMessage, sendMessage } = this.client;
+    return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
+      return isGroup ? sendGroupMessage(handles, text, img) : sendMessage(id, service, text, img);
+    });
   }
   handleMatrixUserBangCommand(bangCmd, matrixMsgEvent) {
     const { bangcommand, command, body } = bangCmd;
