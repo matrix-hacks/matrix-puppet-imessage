@@ -62,6 +62,6 @@ module.exports = function(to, _method, _message, file) {
 };
 
 if (!module.parent) {
-  module.exports('***REMOVED***', "iMessage", "test Morty's Math Teacher (no image)");
-  module.exports('***REMOVED***', "iMessage", "test Morty's Math Teacher (with image)", __dirname+"/../mr-goldenfold.png");
+  module.exports(process.env.PHONE1, "iMessage", "test Morty's Math Teacher (no image)");
+  module.exports(process.env.PHONE1, "iMessage", "test Morty's Math Teacher (with image)", __dirname+"/../mr-goldenfold.png");
 }
