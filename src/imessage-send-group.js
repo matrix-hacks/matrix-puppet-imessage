@@ -16,14 +16,14 @@ module.exports = function(handles, _message, file) {
     buddySetters.push(`set ${buddyVar} to first buddy whose handle is "${handle}"`);
   });
 
-  const attachment = () => {
+  const tellBody = () => {
     if ( file ){
       return `
       set theAttachment1 to POSIX file "${file}"
       send theAttachment1 to thisChat
       `;
     } else {
-      return '';
+      return `send "${message}" to thisChat`;
     }
   };
 
@@ -31,8 +31,7 @@ module.exports = function(handles, _message, file) {
     activate
     ${buddySetters.join('\n\t')}
     set thisChat to make new text chat with properties {participants:{${buddyVars.join(',')}}}
-    ${attachment()}
-    send "${message}" to thisChat
+    ${tellBody()}
   end tell`);
 
   console.log('full applescript', args[1]);

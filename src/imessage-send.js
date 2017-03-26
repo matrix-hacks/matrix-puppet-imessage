@@ -12,34 +12,22 @@ module.exports = function(to, _method, _message, file) {
   console.log('escaped to', message);
   let args = ['-e'];
 
-  const attachment = (method, buddy) => {
+  const tellBody = () => {
     if ( file ){
       return `
       set theAttachment1 to POSIX file "${file}"
-      send theAttachment1 to buddy ${buddy} of ${method}
+      send theAttachment1 to buddy "${to}" of ${method}
       `;
     } else {
-      return '';
+      return `send "${message}" to buddy "${to}" of ${method}`;
     }
   };
 
+  args.push(`tell application "Messages"
+    activate
+    ${tellBody()}
+    end tell`);
 
-  // If string contains letters, it must be a contact name so
-  // find the relevant phone number first
-  if (/[a-z]/i.test(to)) {
-    args.push(`tell application "Contacts"
-    set i to value of phone 1 of (person 1 whose name = "${to}")
-    end tell
-    tell application "Messages"
-    ${attachment(method, 'i')}
-    send "${message}" to buddy i of ${method}
-    end tell`);
-  } else {
-    args.push(`tell application "Messages"
-    ${attachment(method, '"'+to+'"')}
-    send "${message}" to buddy "${to}" of ${method}
-    end tell`);
-  }
   console.log('full applescript', args[1]);
 
   return new Promise(function(resolve, reject) {

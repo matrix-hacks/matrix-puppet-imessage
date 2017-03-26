@@ -6,20 +6,20 @@ const {
     Cli, AppServiceRegistration
   },
   Puppet,
-  MatrixPuppetBridgeBase
+  MatrixPuppetBridgeBase,
+  utils: { download }
 } = require("matrix-puppet-bridge");
 const puppet = new Puppet('./config.json');
-
+const sizeOf = require('image-size');
+const mime = require('mime-types');
+const findAttachment = require('./src/find-attachment');
 
 class App extends MatrixPuppetBridgeBase {
   getServicePrefix() {
     return "imessage";
   }
-  defaultDeduplicationTag() {
-    return " \ufeff"; // Zero width non-breaking space
-  }
-  defaultDeduplicationTagPattern() {
-    return " \\ufeff$"; // Zero width non-breaking space
+  getServiceName() {
+    return "iMessage";
   }
   initThirdPartyClient() {
     this.roomData = {};
@@ -57,24 +57,37 @@ class App extends MatrixPuppetBridgeBase {
       topic: isMultiParty ? 'iMessage: group chat' : 'iMessage: 1-on-1 chat'
     };
 
-    if ( files.length > 0 ) {
-      message = `[This iMessage has ${files.length} attachments!]\n${message}`;
-    }
-
     // too hard to get one thru applescripting contacts, just allow null
     // so that we can use bang commands and have them persist forever.
     // by preventing base class from calling setDisplayName when senderName is null
     this.allowNullSenderName = true;
 
-    return Promise.all([
-      this.setRoomService(roomId, service),
-      this.handleThirdPartyRoomMessage({
+    return this.setRoomService(roomId, service).then(()=>{
+      let payload = {
         roomId,
         senderName: isMultiParty ? null : fileRecipient,
         senderId: senderIsMe ? undefined : sender,
         text: message
-      })
-    ]).then(() => {
+      };
+      if ( files.length > 0 ) {
+        return Promise.map(files, (file)=>{
+          return findAttachment(file.id, file.name).then(filepath=>{
+            payload.path = filepath;
+            payload.mimetype = mime.lookup(payload.path);
+            if ( payload.mimetype.match(/^image/) ) {
+              const dim = sizeOf(payload.path);
+              payload.h = dim.height;
+              payload.w = dim.width;
+              return this.handleThirdPartyRoomImageMessage(payload);
+            } else {
+              return this.sendStatusMsg({}, "dont know how to deal with filetype", payload);
+            }
+          });
+        });
+      } else {
+        return this.handleThirdPartyRoomMessage(payload);
+      }
+    }).then(() => {
       return this.getOrCreateMatrixRoomFromThirdPartyRoomId(roomId);
     }).then((matrixRoomId) => {
       // we need to pre-emptively put all the participants into the room
@@ -132,12 +145,17 @@ class App extends MatrixPuppetBridgeBase {
       return isGroup ? sendGroupMessage(handles, text) : sendMessage(id, service, text);
     });
   }
-  sendPictureMessageAsPuppetToThirdPartyRoomWithId(id, text, img, matrixEvent) {
+
+  sendImageMessageAsPuppetToThirdPartyRoomWithId(id, { url, text }, matrixEvent) {
     const { sendGroupMessage, sendMessage } = this.client;
-    return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
-      return isGroup ? sendGroupMessage(handles, text, img) : sendMessage(id, service, text, img);
+    return download.getTempfile(url).then(({path}) => {
+      const img = path;
+      return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
+        return isGroup ? sendGroupMessage(handles, text, img) : sendMessage(id, service, text, img);
+      });
     });
   }
+
   handleMatrixUserBangCommand(bangCmd, matrixMsgEvent) {
     const { bangcommand, command, body } = bangCmd;
     const { room_id } = matrixMsgEvent;

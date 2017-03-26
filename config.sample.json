@@ -1,6 +1,7 @@
 {
   "registrationPath": "imessage-registration.yaml",
   "ichatArchives": "~/Library/Containers/com.apple.iChat/Data/Library/Messages/Archive/**/*.ichat",
+  "attachmentsDir": "~/Library/Messages/Attachments",
   "port": 8090,
   "bridge": {
     "homeserverUrl":"https://yourserver.com",
