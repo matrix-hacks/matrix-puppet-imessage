@@ -98,11 +98,12 @@ class App extends MatrixPuppetBridgeBase {
       const otherPeople = participantIds.filter(pid=> !pid.match(/^e:/));
       console.log('filtered out myself', otherPeople);
       return Promise.map(otherPeople, (senderId) => {
-        const ghost = this.getIntentFromThirdPartySenderId(senderId);
-        return ghost.join(matrixRoomId).then(()=>{
-          console.log('joined ghost', senderId);
-        }, (err)=>{
-          console.log('failed to join ghost', senderId, err);
+        return this.getIntentFromThirdPartySenderId(senderId).then(ghost=>{
+          return ghost.join(matrixRoomId).then(()=>{
+            console.log('joined ghost', senderId);
+          }, (err)=>{
+            console.log('failed to join ghost', senderId, err);
+          });
         });
       });
     }).catch(err=>{
@@ -148,7 +149,7 @@ class App extends MatrixPuppetBridgeBase {
 
   sendImageMessageAsPuppetToThirdPartyRoomWithId(id, { url, text }, matrixEvent) {
     const { sendGroupMessage, sendMessage } = this.client;
-    return download.getTempfile(url).then(({path}) => {
+    return download.getTempfile(url, { tagFilename: true }).then(({path}) => {
       const img = path;
       return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
         return isGroup ? sendGroupMessage(handles, text, img) : sendMessage(id, service, text, img);
@@ -169,9 +170,10 @@ class App extends MatrixPuppetBridgeBase {
       ].join('\n'));
     } else if ( command === 'rename' ) {
       const [id, ...rest] = body.split(' ');
-      const ghost = this.getIntentFromThirdPartySenderId(id);
-      return ghost.setDisplayName(rest.join(' ')).then(()=>{},(err)=>{
-        reply(err.stack);
+      return this.getIntentFromThirdPartySenderId(id).then((ghost) => {
+        return ghost.setDisplayName(rest.join(' ')).then(()=>{},(err)=>{
+          reply(err.stack);
+        });
       });
     } else {
       reply('unrecognized command: '+bangcommand);
