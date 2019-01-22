@@ -34,5 +34,9 @@ Launch the bridge with ```node index.js```.
 
 Restart your HS.
 
+## Discussion, Help and Support
+
+Join us in [the Matrix Puppet Bridge room](https://riot.im/app/#/room/#matrix-puppet-bridge:matrix.org)
+
 # TODO
 * Be able to originate conversations from the Matrix side.
