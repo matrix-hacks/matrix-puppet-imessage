@@ -1,4 +1,4 @@
-# imessage-bridge
+# matrix-puppet-imessage
 
 This is a Matrix bridge for Apple iMessage
 
