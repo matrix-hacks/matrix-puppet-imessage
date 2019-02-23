@@ -1,6 +1,6 @@
 {
   "name": "matrix-puppet-imessage",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -21,7 +21,7 @@
     "bluebird": "^3.4.7",
     "chokidar": "^1.6.1",
     "image-size": "^0.5.1",
-    "matrix-puppet-bridge": "^1.13.0",
+    "matrix-puppet-bridge": "matrix-hacks/matrix-puppet-bridge#decce78",
     "mime-types": "^2.1.15",
     "moment": "^2.17.1",
     "node-persist": "^2.0.7",
