@@ -196,6 +196,7 @@ new Cli({
       reg.setAppServiceToken(AppServiceRegistration.generateToken());
       reg.setSenderLocalpart("imessagebot");
       reg.addRegexPattern("users", "@imessage_.*", true);
+      reg.addRegexPattern("aliases", "#imessage_.*", true);
       callback(reg);
     }).catch(err=>{
       console.error(err.message);
