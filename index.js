@@ -37,12 +37,15 @@ class App extends MatrixPuppetBridgeBase {
       files,
       chatId,
       isMultiParty,
-      participantIds
+      participantIds,
+      isRead
     } = msg;
 
     let message = msg.message || ""; // yea it can come as null from ichat2json
 
     console.log('handling message', msg);
+
+    console.log('read = ', isRead);
 
     let roomId;
     if (chatId && chatId.length > 0) {
