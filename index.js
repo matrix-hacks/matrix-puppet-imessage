@@ -25,6 +25,7 @@ class App extends MatrixPuppetBridgeBase {
     this.roomData = {};
     this.client = new Client();
     this.client.on('message', m => this.handleThirdPartyClientMessage(m));
+    this.client.on('read', m => this.setMessageRead(m));
     return this.client.init(config.ichatArchives);
   }
   handleThirdPartyClientMessage(msg) {
@@ -44,8 +45,6 @@ class App extends MatrixPuppetBridgeBase {
     let message = msg.message || ""; // yea it can come as null from ichat2json
 
     console.log('handling message', msg);
-
-    console.log('read = ', isRead);
 
     let roomId;
     if (chatId && chatId.length > 0) {
@@ -113,6 +112,11 @@ class App extends MatrixPuppetBridgeBase {
       console.error(err.stack);
     });
   }
+
+  setMessageRead(msg) {
+    console.log("mark message as read");
+  }
+
   getThirdPartyRoomDataById(id) {
     return this.roomData[id];
   }
