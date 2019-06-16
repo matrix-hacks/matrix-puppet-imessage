@@ -157,6 +157,11 @@ class App extends MatrixPuppetBridgeBase {
     });
   }
 
+  sendReadReceiptAsPuppetToThirdPartyRoomWithId() {
+    //this does nothing but avoiding exceptions :)
+  }
+
+
   handleMatrixUserBangCommand(bangCmd, matrixMsgEvent) {
     const { bangcommand, command, body } = bangCmd;
     const { room_id } = matrixMsgEvent;
