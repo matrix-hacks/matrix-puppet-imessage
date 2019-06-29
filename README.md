@@ -16,6 +16,15 @@ cd into the directory
 
 run `npm install`
 
+### special for macOS Mojave and later
+
+Since Mojave the System Integrity Protection (SIP) prevents ichat2json from reading incoming messages.
+There are two options: 
+### a) Allow access for ichat2json (recommeded)
+Go to "System settings" -> "Data protection" -> "Full disk access" and add `ichat2json` from `matrix-puppet-imagessage/bin/`
+### b) Disable SIP (not recommended)
+Boot to recovery using CMD+R, open terminal, type `csrutil disable` and reboot.
+
 ## configure
 
 Copy `config.sample.json` to `config.json` and update it to match your setup
