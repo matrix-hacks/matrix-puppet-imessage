@@ -10,8 +10,6 @@ const {
   utils: { download }
 } = require("matrix-puppet-bridge");
 const puppet = new Puppet('./config.json');
-const sizeOf = require('image-size');
-const mime = require('mime-types');
 const findAttachment = require('./src/find-attachment');
 
 class App extends MatrixPuppetBridgeBase {
@@ -73,15 +71,7 @@ class App extends MatrixPuppetBridgeBase {
         return Promise.map(files, (file)=>{
           return findAttachment(file.id, file.name).then(filepath=>{
             payload.path = filepath;
-            payload.mimetype = mime.lookup(payload.path);
-            if ( payload.mimetype.match(/^image/) ) {
-              const dim = sizeOf(payload.path);
-              payload.h = dim.height;
-              payload.w = dim.width;
-              return this.handleThirdPartyRoomImageMessage(payload);
-            } else {
-              return this.sendStatusMsg({}, "dont know how to deal with filetype", payload);
-            }
+            return this.handleThirdPartyRoomMessageWithAttachment(payload);
           });
         });
       } else {
