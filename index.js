@@ -11,6 +11,7 @@ const {
 } = require("matrix-puppet-bridge");
 const puppet = new Puppet('./config.json');
 const findAttachment = require('./src/find-attachment');
+const localSeperators = new Map();
 
 class App extends MatrixPuppetBridgeBase {
   getServicePrefix() {
@@ -24,13 +25,16 @@ class App extends MatrixPuppetBridgeBase {
     this.client = new Client();
     this.client.on('message', m => this.handleThirdPartyClientMessage(m));
 
+    localSeperators.set('en', ' at ');
+    localSeperators.set('de', ' am ');
+
     this.receiptHistory = new Map();
     this.client.on('read', m => this.handleReadReceipt(m));
+
     return this.client.init(config.ichatArchives);
   }
   handleThirdPartyClientMessage(msg) {
     const {
-      fileRecipient,
       senderIsMe,
       sender,
       subject, //can be null, e.g. if multi-party chat
@@ -40,8 +44,12 @@ class App extends MatrixPuppetBridgeBase {
       isMultiParty,
       participantIds
     } = msg;
-
+    
     let message = msg.message || ""; // yea it can come as null from ichat2json
+    let fileRecipient = msg.fileRecipient;
+    if(localSeperators.has(config.osLanguage)) { // remove date and time provided in sender name
+      fileRecipient = fileRecipient.split(localSeperators.get(config.osLanguage))[0]; 
+    }
 
     console.log('handling message', msg);
 
