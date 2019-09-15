@@ -76,6 +76,7 @@ class Client extends EventEmitter {
                 return storage.getItem(msg.hash).then((meta) => {
                   let shouldSkip = meta && meta.skip;
                   let shouldRelay = !shouldSkip;
+                  let shouldSetRead = meta && shouldSkip && meta.isRead != msg.isRead;
                   if (shouldRelay) {
                     this.emit('message', Object.assign({}, {
                       fileRecipient
@@ -83,10 +84,15 @@ class Client extends EventEmitter {
                   } else {
                     console.log('skiping message: ', msg.sender, msg.message);
                   }
+                  if (shouldSetRead) {
+                    this.emit('read', Object.assign({}, {
+                      fileRecipient
+                    }, msg));
+                  }
                 })
                   .then(()=>{
                     console.log('marking skip: ', msg.hash, msg.sender, msg.message);
-                    return storage.setItem(msg.hash, {skip: true});
+                    return storage.setItem(msg.hash, {skip: true, isRead: msg.isRead});
                   })
                   .catch((err)=>{
                     // poor man's retry

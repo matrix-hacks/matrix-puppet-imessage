@@ -28,6 +28,9 @@ class App extends MatrixPuppetBridgeBase {
     localSeperators.set('en', ' at ');
     localSeperators.set('de', ' am ');
 
+    this.receiptHistory = new Map();
+    this.client.on('read', m => this.handleReadReceipt(m));
+
     return this.client.init(config.ichatArchives);
   }
   handleThirdPartyClientMessage(msg) {
@@ -108,6 +111,42 @@ class App extends MatrixPuppetBridgeBase {
       console.error(err.stack);
     });
   }
+
+  async handleReadReceipt(msg) {
+    console.log("mark message as read");
+    try {
+      const {
+        senderIsMe,
+        sender,
+        subject, //can be null, e.g. if multi-party chat
+        chatId
+      } = msg;
+      let roomId;
+      if (chatId && chatId.length > 0) {
+        // this is a multi-party or group chat
+        roomId = chatId;
+      } else {
+        // this is a 1 on 1 chat
+        roomId = senderIsMe ? subject : sender;
+      }
+      if(!this.receiptHistory.has(roomId)) {
+        console.log("no send event found, returning");
+        return;
+      }
+      const event = this.receiptHistory.get(roomId);
+      const ghostIntent = await this.getIntentFromThirdPartySenderId(sender);
+      const matrixRoomId = await this.getOrCreateMatrixRoomFromThirdPartyRoomId(roomId);
+      // HACK: copy from matrix-appservice-bridge/lib/components/indent.js
+      // client can get timeout value, but intent does not support this yet.
+      await ghostIntent._ensureJoined(matrixRoomId);
+      await ghostIntent._ensureHasPowerLevelFor(matrixRoomId, "m.read");
+      ghostIntent.client.sendReadReceipt (event);
+      return this.receiptHistory.delete(roomId);      
+    } catch (err) {
+      debug('could not send read event', err.message);
+    }
+  }
+
   getThirdPartyRoomDataById(id) {
     return this.roomData[id];
   }
@@ -140,6 +179,9 @@ class App extends MatrixPuppetBridgeBase {
   }
   sendMessageAsPuppetToThirdPartyRoomWithId(id, text, matrixEvent) {
     const { sendGroupMessage, sendMessage } = this.client;
+    matrixEvent.getRoomId = () => matrixEvent.room_id;
+    matrixEvent.getId = () => matrixEvent.event_id;
+    this.receiptHistory.set(id, matrixEvent);
     return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
       return isGroup ? sendGroupMessage(handles, text) : sendMessage(id, service, text);
     });
