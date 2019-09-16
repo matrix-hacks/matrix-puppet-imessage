@@ -20,7 +20,7 @@
     "JSONStream": "^1.3.5",
     "bluebird": "^3.5.4",
     "chokidar": "^1.6.1",
-    "matrix-puppet-bridge": "matrix-hacks/matrix-puppet-bridge#c16ac9f",
+    "matrix-puppet-bridge": "matrix-hacks/matrix-puppet-bridge#219d46f",
     "moment": "^2.24.0",
     "node-persist": "^2.0.7",
     "queue": "^4.5.1"

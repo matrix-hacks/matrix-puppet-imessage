@@ -63,7 +63,8 @@ class App extends MatrixPuppetBridgeBase {
     }
     this.roomData[roomId] = {
       name: fileRecipient,
-      topic: isMultiParty ? 'iMessage: group chat' : 'iMessage: 1-on-1 chat'
+      topic: isMultiParty ? 'iMessage: group chat' : 'iMessage: 1-on-1 chat',
+      is_direct: isMultiParty ? false : true
     };
 
     // too hard to get one thru applescripting contacts, just allow null
