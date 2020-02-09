@@ -144,7 +144,7 @@ class App extends MatrixPuppetBridgeBase {
       ghostIntent.client.sendReadReceipt (event);
       return this.receiptHistory.delete(roomId);      
     } catch (err) {
-      debug('could not send read event', err.message);
+      console.log('could not send read event', err.message);
     }
   }
 
@@ -159,18 +159,7 @@ class App extends MatrixPuppetBridgeBase {
   }
   prepareToSend(id, matrixEvent) {
     if ( id.match(/^chat/) ) {
-      // it's a multi party chat... we need to send to participants list
-      // luckily we can find out about all the ghosts (they get preloaded)
-      // and pull their handles down and use that to chat with the group
-      const roomMembers = this.puppet.getMatrixRoomMembers(matrixEvent.room_id);
-      const handles = roomMembers.reduce((acc, gid) => {
-        let tpid = this.getThirdPartyUserIdFromMatrixGhostId(gid);
-        return tpid ? [...acc, tpid] : acc;
-      },[]);
-      return Promise.resolve({
-        isGroup: true,
-        handles
-      });
+      return Promise.resolve({ isGroup: true });
     } else {
       return this.getRoomService(id).then(service => ({
         isGroup: false,
@@ -183,8 +172,8 @@ class App extends MatrixPuppetBridgeBase {
     matrixEvent.getRoomId = () => matrixEvent.room_id;
     matrixEvent.getId = () => matrixEvent.event_id;
     this.receiptHistory.set(id, matrixEvent);
-    return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
-      return isGroup ? sendGroupMessage(handles, text) : sendMessage(id, service, text);
+    return this.prepareToSend(id, matrixEvent).then(({isGroup, service})=>{
+      return isGroup ? sendGroupMessage(id, text) : sendMessage(id, service, text);
     });
   }
 
@@ -192,8 +181,8 @@ class App extends MatrixPuppetBridgeBase {
     const { sendGroupMessage, sendMessage } = this.client;
     return download.getTempfile(url, { tagFilename: true }).then(({path}) => {
       const img = path;
-      return this.prepareToSend(id, matrixEvent).then(({isGroup, handles, service})=>{
-        return isGroup ? sendGroupMessage(handles, text, img) : sendMessage(id, service, text, img);
+      return this.prepareToSend(id, matrixEvent).then(({isGroup, service})=>{
+        return isGroup ? sendGroupMessage(id, text, img) : sendMessage(id, service, text, img);
       });
     });
   }

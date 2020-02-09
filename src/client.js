@@ -23,8 +23,8 @@ class Client extends EventEmitter {
   sendMessage (id, service, text, file) {
     return iMessageSend(id, service != "iMessage" ? "sms" : "iMessage", text, file);
   }
-  sendGroupMessage (handles, text, file) {
-    return iMessageSendGroup(handles, text, file);
+  sendGroupMessage (id, text, file) {
+    return iMessageSendGroup(id, text, file);
   }
   init (ichatArchives) {
     const storage = nodePersist.create({
