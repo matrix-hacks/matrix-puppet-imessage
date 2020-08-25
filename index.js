@@ -191,6 +191,9 @@ class App extends MatrixPuppetBridgeBase {
     //this does nothing but avoiding exceptions :)
   }
 
+  sendTypingEventAsPuppetToThirdPartyRoomWithId() {
+    //also avoid exceptions
+  }
 
   handleMatrixUserBangCommand(bangCmd, matrixMsgEvent) {
     const { bangcommand, command, body } = bangCmd;
